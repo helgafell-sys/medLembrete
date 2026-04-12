@@ -164,7 +164,7 @@ Veja o histórico completo em [CHANGELOG.md](CHANGELOG.md).
 ## 👤 Autor
 
 **Seu Nome**
-- GitHub: [@SEU_USUARIO](https://github.com/SEU_USUARIO)
+- GitHub: [@helgafell-sys](https://github.com/helgafell-sys)
 
 ## 📄 Licença
 
