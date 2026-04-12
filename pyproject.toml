@@ -1,0 +1,32 @@
+[project]
+name = "medlembrete"
+version = "1.0.0"
+description = "CLI para controle de medicamentos e registro de doses"
+authors = [{ name = "Seu Nome", email = "seuemail@exemplo.com" }]
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.4",
+]
+
+[project.scripts]
+medlembrete = "src.app:run_cli"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--tb=short -v"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+ignore = ["E501"]
