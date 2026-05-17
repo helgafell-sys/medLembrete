@@ -8,6 +8,12 @@ import json
 import os
 from datetime import datetime
 
+# Integração com API pública — importação com fallback para ambientes sem rede
+try:
+    from src.api_remedios import buscar_info_medicamento, buscar_interacoes, ErroAPI
+except ImportError:
+    from api_remedios import buscar_info_medicamento, buscar_interacoes, ErroAPI  # type: ignore[no-redef]
+
 DATA_FILE = os.path.join(os.path.dirname(__file__), "..", "data", "medicamentos.json")
 
 
@@ -172,13 +178,14 @@ def _validar_horario(horario: str) -> bool:
 
 MENU = """
 ╔══════════════════════════════════╗
-║        💊 MedLembrete 1.0.0       ║
+║        💊 MedLembrete 1.1.0       ║
 ╠══════════════════════════════════╣
 ║  1. Cadastrar medicamento        ║
 ║  2. Listar medicamentos          ║
 ║  3. Registrar dose tomada        ║
 ║  4. Ver histórico de doses       ║
 ║  5. Remover medicamento          ║
+║  6. Consultar bula (RxNorm/NIH)  ║
 ║  0. Sair                         ║
 ╚══════════════════════════════════╝
 """
@@ -244,6 +251,40 @@ def run_cli() -> None:  # pragma: no cover
                 _print(f"\n🗑️  '{med['nome']}' removido com sucesso.")
             except ValueError as e:
                 _print(f"\n❌ Erro: {e}")
+
+        elif opcao == "6":
+            nome = _input("Nome do medicamento para consultar na RxNorm (NIH): ").strip()
+            if not nome:
+                _print("\n⚠️  Digite um nome de medicamento.")
+            else:
+                _print(f"\n🔍 Consultando RxNorm para '{nome}'…")
+                try:
+                    info = buscar_info_medicamento(nome)
+                    if info is None:
+                        _print("❌ Medicamento não encontrado na base RxNorm.")
+                    else:
+                        _print(f"\n📋 Nome oficial : {info['nome_oficial']}")
+                        _print(f"   RxCUI        : {info['rxcui']}")
+                        if info["sinonimos"]:
+                            _print(f"   Sinônimos     : {', '.join(info['sinonimos'])}")
+
+                        # Buscar interações se RxCUI disponível
+                        if info["rxcui"]:
+                            _print("\n⚠️  Buscando interações medicamentosas…")
+                            try:
+                                interacoes = buscar_interacoes(info["rxcui"])
+                                if interacoes:
+                                    _print(f"   {len(interacoes)} interação(ões) conhecida(s):")
+                                    for inter in interacoes[:3]:  # Mostra até 3
+                                        _print(f"   • {inter[:120]}")
+                                else:
+                                    _print("   ✅ Nenhuma interação conhecida encontrada.")
+                            except ErroAPI as e:
+                                _print(f"   ⚠️  Não foi possível buscar interações: {e}")
+                except ErroAPI as e:
+                    _print(f"\n❌ Erro ao consultar API: {e}")
+                except ValueError as e:
+                    _print(f"\n❌ {e}")
 
         elif opcao == "0":
             _print("\nAté logo! Não esqueça seus remédios. 💊")
